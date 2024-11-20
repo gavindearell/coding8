@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>SDG 3 Chat Quiz</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-image: url(DALL·E\ 2024-11-20\ 11.30.19\ -\ A\ modern\ and\ minimalist\ wallpaper\ design\ featuring\ a\ large\ central\ box\ in\ the\ middle\,\ ideal\ for\ website\ backgrounds.\ The\ design\ includes\ a\ clean\ and\ e.webp);
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+        }
+
+        h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            color: #ffffff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 70rem;
+            height: 80vh;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(to right, #19696c, #4eeaea);
+            padding: 10px 20px;
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-messages p {
+            margin: 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .chat-message.bot {
+            align-self: flex-start;
+            background-color: #eaf7e3;
+            border: 1px solid #56ab2f;
+            color: #333;
+        }
+
+        .chat-message.user {
+            align-self: flex-end;
+            background-color: #56ab2f;
+            color: #ffffff;
+            border: none;
+        }
+
+        .chat-input-container {
+            display: flex;
+            border-top: 1px solid #cccccc;
+            padding: 10px;
+            gap: 10px;
+            background-color: #f9f9f9;
+        }
+
+        textarea {
+            flex: 1;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            resize: none;
+        }
+
+        button {
+            background: linear-gradient(to right, #19696c, #4eeaea);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #3a8224;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+          /* Media Queries */
+          @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .chat-container {
+                height: 70vh;
+            }
+
+            textarea {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+
+            button {
+                font-size: 0.9rem;
+                padding: 8px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+                text-align: center;
+                padding: 0 10px;
+            }
+
+            .chat-container {
+                height: 60vh;
+            }
+
+            .chat-messages p {
+                font-size: 0.8rem;
+            }
+
+            textarea {
+                font-size: 0.8rem;
+                padding: 5px;
+            }
+
+            button {
+                font-size: 0.8rem;
+                padding: 5px 8px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .chat-container {
+                height: 50vh;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>SDG 3: Good Health and Well-being Quiz</h1>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            AI Chat Quiz Bot
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <p class="chat-message bot" id="questionText">Click "Generate Question!" to start.</p>
+        </div>
+        <div class="chat-input-container">
+            <textarea id="userAnswer" placeholder="Type your answer..."></textarea>
+            <button id="answerButton">Send</button>
+        </div>
+    </div>
+
+    <button id="generateQuestionButton" style="margin-top: 20px;">-- Generate Question! --</button>
+
+    <!-- Showdown.js for Markdown conversion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js" integrity="sha512-LhccdVNGe2QMEfI3x4DVV3ckMRe36TfydKss6mJpdHjNFiV07dFpS2xzeZedptKZrwxfICJpez09iNioiSZ3hA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Import @google/generative-ai -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // API key for Google Generative AI
+        const API_KEY = "AIzaSyB_wrylT1QmsN-y8mPxWtkX7_aw5h9Cq7c";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        // Function to ask questions using the AI model
+        async function ask(prompt) {
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            let convertedText = new showdown.Converter().makeHtml(text);
+            return convertedText;
+        }
+
+        // Generate question
+        document.getElementById("generateQuestionButton").addEventListener("click", async function () {
+            const chatMessages = document.getElementById("chatMessages");
+            let question = await ask("Create 1 short answer quiz about good health and well-being! Don't give the answer yet. Make a question that only needs a short answer. Please give a different question every time I ask.");
+            let questionMessage = document.createElement("p");
+            questionMessage.classList.add("chat-message", "bot");
+            questionMessage.innerHTML = question;
+            chatMessages.appendChild(questionMessage);
+            document.getElementById("questionText").innerHTML = question;
+        });
+
+        // Generate answer
+        document.getElementById("answerButton").addEventListener("click", async function () {
+            const chatMessages = document.getElementById("chatMessages");
+            const userAnswer = document.getElementById("userAnswer").value;
+            if (!userAnswer.trim()) return; // Prevent empty messages
+
+            // Add user message to chat
+            let userMessage = document.createElement("p");
+            userMessage.classList.add("chat-message", "user");
+            userMessage.textContent = userAnswer;
+            chatMessages.appendChild(userMessage);
+
+            // Clear input
+            document.getElementById("userAnswer").value = "";
+
+            // Generate response
+            let question = document.getElementById("questionText").innerHTML;
+            let answer = await ask(question + "\n" + userAnswer + "\nIs the answer correct? If yes, say the answer is correct. If not, say it is wrong and give a short explanation.");
+            let botMessage = document.createElement("p");
+            botMessage.classList.add("chat-message", "bot");
+            botMessage.innerHTML = answer;
+            chatMessages.appendChild(botMessage);
+
+            // Scroll to the latest message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    </script>
+
+</body>
+</html>
